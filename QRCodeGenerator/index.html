@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .sidebar-footer{
+            text-align: center;
+        }
+        input{
+            width:600px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Container where the QR code will appear -->
+    <div class="sidebar-footer">
+        
+    <input type="text" name="" id="url">
+        <button class="btn-primary" onclick="generateShareQR()">Generate QR</button>
+        <div id="qrcode-container" style="margin-top: 15px; display: flex; justify-content: center;"></div>
+    </div>
+    <!-- Include the library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        function generateShareQR() {
+            const container = document.getElementById("qrcode-container");
+            container.innerHTML = ""; // Clear previous QR
+
+            // Get the current URL (or a link with map coordinates)
+            const currentUrl = document.getElementById("url").value;
+            if(!currentUrl){
+                alert("Enter URL");
+                return;
+            }
+            new QRCode(container, {
+                text: currentUrl,
+                width: 250,
+                height: 250
+            });
+        }
+
+        // const el = document.getElementById("qrcode-container");
+        // Generate the QR code
+        // new QRCode(el, "https://google.com");
+
+        // var qrcode = new QRCode(document.getElementById("qrcode"), {
+        //     text: "https://your-gis-app.com/map-view?lat=12&lon=45",
+        //     width: 128,
+        //     height: 128,
+        //     colorDark: "#2563eb", // Using your primary-blue variable!
+        //     colorLight: "#ffffff",
+        //     correctLevel: QRCode.CorrectLevel.H
+        // });
+    </script>
+</body>
+
+</html>
