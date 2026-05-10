@@ -1,0 +1,37 @@
+[
+    {
+        "id": 1,
+        "name": "Account Manager",
+        "version": "1.0.0",
+        "description": "Streamline your financial tracking, ledger management, and client accounts in one place.",
+        "color": "#3b82f6",
+        "icon": "fa-wallet",
+        "downloads": [
+            { "platform": "Android", "url": "/Products/Android/AccountManager.apk", "icon": "fa-brands fa-android" }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "School Portal",
+        "version": "1.2.1",
+        "description": "Complete management system for attendance, finance, and student tracking.",
+        "color": "#4f46e5",
+        "icon": "fa-school",
+        "downloads": [
+            { "platform": "Desktop", "url": "#", "icon": "fa-desktop" },
+            { "platform": "Android", "url": "#", "icon": "fa-brands fa-android" },
+            { "platform": "iOS", "url": "#", "icon": "fa-brands fa-apple" }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "Booking App",
+        "version": "1.0.4",
+        "description": "Effortless appointment scheduling and reservation management with real-time updates.",
+        "color": "#a855f7",
+        "icon": "fa-calendar-check",
+        "downloads": [
+            { "platform": "Android", "url": "Products/Android/BookingApp.apk", "icon": "fa-brands fa-android" }
+        ]
+    }
+]
