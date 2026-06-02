@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geoserver Layer Field Generator</title>
+    <style>
+        /*Button*/
+        .btn-gis-gradient {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-gis-gradient:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-gis-gradient:active {
+            transform: translateY(0);
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+
+
+        /*Loader*/
+        .loader-container {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .spinner-inline {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #2563eb;
+            /* Matches the Blue Theme */
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button type="button" class="btn-gis-gradient" onclick="takeAction()">
+        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+        Generate JSON Field Detail of Layers
+    </button>
+
+    <div class="loader-container" id="loader">
+        <div class="spinner-inline"></div>
+        <span>Fetching Layer Metadata...</span>
+    </div>
+    <script>
+        const tocdata = JSON.parse("[{\"item\":[{\"id\":\"genesys_base_map\",\"url\":\"https://mapapi.genesysmap.com/app/tiles/{z}/{x}/{y}.png\",\"name\":\"ImageryLayers\",\"title\":\"Genesys Base Map\",\"dataId\":\"1\",\"extent\":{},\"checked\":true,\"options\":{},\"dataType\":\"wmts\",\"dataGroupId\":\"1\"},{\"id\":\"open_street_map\",\"url\":\"https://a.tile.openstreetmap.org/\",\"name\":\"ImageryLayers\",\"globe\":{\"baseColor\":\"WHITE\"},\"title\":\"Open Street Map\",\"dataId\":\"2\",\"extent\":{},\"checked\":true,\"options\":{},\"dataType\":\"openstreet\",\"layertype\":\"nobasemap\",\"dataGroupId\":\"1\"},{\"id\":\"dsm\",\"url\":\"http://203.112.156.34/seepz_geowebcache/seepz_dsm@EPSG:4326@png/{z}/{x}/{reverseY}.png\",\"name\":\"ImageryLayers\",\"index\":103,\"title\":\"DSM Layer\",\"dataId\":\"4\",\"extent\":{},\"layers\":\"seepz_poc:seepz_dsm\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"tms\",\"dataGroupId\":\"1\"},{\"id\":\"ortho\",\"url\":\"http://203.112.156.34/seepz_geowebcache/seepz_ortho@EPSG:4326@png/{z}/{x}/{reverseY}.png\",\"name\":\"ImageryLayers\",\"index\":104,\"title\":\"ortho\",\"dataId\":\"5\",\"extent\":{},\"layers\":\"seepz_poc:seepz_Banglore_Cog\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"tms\",\"dataGroupId\":\"1\"},{\"id\":\"land_use_land_cover\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Land Use Land Cover\",\"dataId\":\"12\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_land_use_land_cover\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"tree_clad_area\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Tree Clad Area\",\"dataId\":\"22\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_tree_clad_area\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"building\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Building Footprint\",\"dataId\":\"6\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_building\",\"checked\":true,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"cell_tower_wifi_hotspots_public\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Cell Tower Wifi Hotspots Public\",\"dataId\":\"10\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_cell_tower_wifi_hotspots_public\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"community_toilet_point\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Community Toilet Point\",\"dataId\":\"11\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_community_toilet_point\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"fire_station_points\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Fire Station\",\"dataId\":\"13\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_fire_station_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"garbage_collection_points\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Garbage Collection Point\",\"dataId\":\"14\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_garbage_collection_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"road_line\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Road Line\",\"dataId\":\"15\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_road_line\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"road_polygon\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Road Polygon\",\"dataId\":\"16\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_road_polygon\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"frames\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"index\":86,\"title\":\"Pano_Points\",\"dataId\":\"3\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_pano_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"sewerage_network_points\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Sewerage Network Points\",\"dataId\":\"28\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_sewerage_network_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"storm_water_drainage_network_points\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Strom Water Drainage Network Points\",\"dataId\":\"20\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_storm_water_drainage_network_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"tree\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Tree\",\"dataId\":\"21\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_tree\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"water_supply_network_points\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Water Supply Network Points\",\"dataId\":\"23\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_water_supply_network_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"water_bodies_polygon\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Water Bodies Polygon\",\"dataId\":\"24\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_water_bodies_polygon\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"power_supply_network_points\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Power Supply Network Point\",\"dataId\":\"25\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_power_supply_network_points\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"},{\"id\":\"other_point\",\"url\":\"http://203.112.156.34/geoserver/seepz_poc/wms\",\"name\":\"ImageryLayers\",\"title\":\"Other Point\",\"dataId\":\"26\",\"extent\":{},\"hidden\":false,\"layers\":\"seepz_poc:seepz_other_point\",\"checked\":false,\"options\":{\"format\":\"image/png\",\"version\":\"1.1.0\",\"transparent\":\"true\"},\"dataType\":\"wms\",\"dataGroupId\":\"1\"}],\"name\":\"Layer\",\"title\":\"Layers\",\"bodyId\":\"baselayer_container\",\"checked\":true,\"buttonID\":\"baselayer_btn\"},{\"item\":[{\"id\":\"mesh\",\"lat\":19.12545,\"lng\":72.87685,\"url\":\"/seepz_mesh/3dtiles.json\",\"name\":\"data\",\"title\":\"Seepz Mesh\",\"dataId\":\"101\",\"height\":100,\"dataType\":\"mesh\",\"dataGroupId\":\"2\"}],\"name\":\"Model\",\"title\":\"3D Mesh\",\"bodyId\":\"model_container\",\"checked\":false,\"buttonID\":\"model_btn\"},{\"item\":[{\"id\":\"terrain\",\"url\":\"http://203.112.156.34/seepz_dem\",\"name\":\"Terrain\",\"title\":\"DEM Layer\",\"dataId\":\"1\",\"dataType\":\"terrain\",\"layertype\":\"terrain\",\"dataGroupId\":\"3\"}],\"name\":\"Terrain\",\"title\":\"Terrain\",\"bodyId\":\"terrain_container\",\"checked\":true,\"buttonID\":\"terrain_btn\"}]");
+        const total = tocdata && tocdata[0].item.length;
+        function takeAction() {
+            document.getElementById("loader").style.display = 'inline-flex';
+            tocdata[0].item.forEach((element, index) => {
+                if (element.dataType == "wms") {
+                    const url = `http://203.112.156.34/geoserver/wfs?service=WFS&version=1.1.0&request=DescribeFeatureType&typeName=${element.layers}&outputFormat=application/json`;
+                    fetchLayerFields(url, index);
+                }
+            });
+        }
+
+        async function fetchLayerFields(url, index) {
+            const res = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+
+            if (res) {
+                formatLayerData(res, index)
+            }
+        }
+
+        const layerFieldDetail = [];
+        function formatLayerData(geoserverResponse, index) {
+            const featureType = geoserverResponse?.featureTypes?.[0];
+
+            if (!featureType) {
+                return null;
+            }
+            const displayName = featureType.typeName;
+            const fields = featureType.properties
+                .filter(prop => prop.localType !== 'Geometry' && prop.name !== 'geom')
+                .map(prop => [{fieldName: prop.name, fieldType:prop.localType}]);
+
+            layerFieldDetail.push({
+                "display_name": displayName,
+                "layer_name": featureType.typeName,
+                "field_name": [...fields].map((field)=> field[0]),
+                "outfield": [...fields].map((field)=> field[0].fieldName) // Creates a copy of the fields array
+            });
+            if (total - 1 == index) {
+                downloadJSON(layerFieldDetail);
+            }
+        }
+
+
+        function downloadJSON(data, filename = 'geoserver_layers_config.json') {
+            const jsonString = JSON.stringify(data, null, 2);
+
+            const blob = new Blob([jsonString], { type: 'application/json' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(link.href);
+            document.getElementById("loader").style.display = 'none';
+        }
+
+
+
+        //Option 2
+        //Integrate Directly into your Async Pipeline
+        // async function generateAndSaveConfig() {
+        //     try {
+        //         const urls = [ /* your 17 geoserver layer URLs */];
+
+        //         // 1. Map all URLs to your fetch and format logic
+        //         const layerPromises = urls.map(url => fetchAndFormatLayer(url, extractLayerName(url)));
+        //         const resolvedConfigs = await Promise.all(layerPromises);
+
+        //         // 2. Flatten the array of arrays into a single array containing the 17 objects
+        //         const finalConfigArray = resolvedConfigs.flat().filter(Boolean);
+
+        //         console.log("Processing complete. Triggering download...", finalConfigArray);
+
+        //         // 3. Pass the array directly to download it as a file
+        //         downloadJSON(finalConfigArray, 'seepz_layers_manifest.json');
+
+        //     } catch (error) {
+        //         console.error("Failed to generate configurations:", error);
+        //     }
+        // }
+
+
+
+
+
+
+        //Option 3
+        //Quick Save Directly from Browser Console
+        // (function(data) {
+        //     const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
+        //     const a = document.createElement('a');
+        //     a.href = URL.createObjectURL(blob);
+        //     a.download = 'layers_backup.json';
+        //     a.click();
+        // })(temp1);
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timesheet Summary</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <!-- FullCalendar CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #fafafa;
+            margin: 0 auto;
+        }
+
+        /* Inline, single-line summary bar */
+        .summary-bar {
+            background: #f5f5f5;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .summary-title {
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .filter-container {
+            margin-left: auto; /* Pushes the checkbox to the far right */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 1.2;
+            min-width: 450px;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 400px;
+            max-width: 550px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* Calendar Styling */
+        #calendar {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #ddd;
+        }
+
+        /* Calendar Event Classes */
+        .fc-event.logged-day-green {
+            background-color: #22c55e !important; /* Green for >= 8 hrs */
+            border-color: #16a34a !important;
+            color: white !important;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .fc-event.logged-day-red {
+            background-color: #ef4444 !important; /* Red for < 8 hrs */
+            border-color: #dc2626 !important;
+            color: white !important;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Timesheet Summary</h2>
+
+<input type="file" id="csvFile" accept=".csv">
+
+<!-- Compact Single-Line Bar for Metrics and Filters -->
+<div id="summaryBar" class="summary-bar" style="display: none;">
+    <span class="summary-title">Effort Summary</span>
+    <span><b>Total Days:</b> <span id="statDays">0</span></span>
+    <span><b>Total Minutes:</b> <span id="statMins">0</span></span>
+    <span><b>Total Hours:</b> <span id="statHrs">0</span></span>
+    <span><b>Avg Hours/Day:</b> <span id="statAvg">0</span></span>
+    
+    <label class="filter-container">
+        <input type="checkbox" id="filterShortDays">
+        <span style="color: #dc2626;">Show Short Hours Only (< 8h)</span>
+    </label>
+</div>
+
+<div class="container">
+    
+    <!-- Left Column: Data Table -->
+    <div class="left-panel">
+        <table id="detailsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Total Minutes</th>
+                    <th>Total Hours</th>
+                    <th>Status / Deficit</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+
+    <!-- Right Column: Calendar View -->
+    <div class="right-panel">
+        <div id="calendar"></div>
+    </div>
+
+</div>
+
+<script>
+let calendar;
+let globalDataCache = {}; // Keeps track of parsed metrics for live filtering
+
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: 'auto',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+        }
+    });
+    calendar.render();
+
+    // Event listener for the filtering checkbox
+    document.getElementById("filterShortDays").addEventListener("change", function() {
+        if (Object.keys(globalDataCache).length > 0) {
+            render(globalDataCache);
+        }
+    });
+});
+
+document.getElementById("csvFile").addEventListener("change", function(e){
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results){
+            const rows = results.data;
+            globalDataCache = {}; // Reset
+
+            rows.forEach(row => {
+                const date = row.Date?.trim();
+                const minutes = parseFloat(row.Minutes || 0);
+
+                if(!date) return;
+
+                if(!globalDataCache[date]){
+                    globalDataCache[date] = 0;
+                }
+                globalDataCache[date] += minutes;
+            });
+
+            // Show hidden UI blocks now that data exists
+            document.getElementById("summaryBar").style.display = "flex";
+            document.getElementById("detailsTable").style.display = "table";
+
+            render(globalDataCache);
+        }
+    });
+});
+
+function render(summary){
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    const showOnlyShort = document.getElementById("filterShortDays").checked;
+    
+    let totalMinutes = 0;
+    let totalDaysCounted = 0;
+    const dates = Object.keys(summary).sort();
+    const calendarEvents = [];
+
+    dates.forEach(date => {
+        const mins = summary[date];
+        const hours = (mins/60).toFixed(2);
+        const isShortDay = hours < 8;
+
+        // Skip rows if filter checkbox is active and day matches compliance requirements
+        if (showOnlyShort && !isShortDay) {
+            return; 
+        }
+
+        // Tally aggregate scores based on displayed elements
+        totalMinutes += mins;
+        totalDaysCounted++;
+        
+        let rowStyle = '';
+        let pendingHr = '<td style="color: #16a34a; font-weight: bold;">Complete</td>';
+        let eventClass = 'logged-day-green';
+        
+        if(isShortDay){
+            rowStyle = `style='background-color: #fef2f2;'`;
+            pendingHr = `<td style="background:#ef4444; color:white; font-weight:bold;">-${480 - (hours * 60)} mins</td>`;
+            eventClass = 'logged-day-red';
+        }
+
+        tbody.innerHTML += `
+            <tr ${rowStyle}>
+                <td><b>${date}</b></td>
+                <td>${mins}</td>
+                <td>${hours} hrs</td>
+                ${pendingHr}
+            </tr>
+        `;
+
+        calendarEvents.push({
+            title: `${hours} hrs`,
+            start: date,
+            className: eventClass
+        });
+    });
+
+    // Calculate Summary Stats based on visible/filtered set
+    const totalHours = (totalMinutes/60).toFixed(2);
+    const avgHours = totalDaysCounted ? (totalHours/totalDaysCounted).toFixed(2) : 0;
+
+    // Inject metrics directly into the single line bar elements
+    document.getElementById("statDays").innerText = totalDaysCounted;
+    document.getElementById("statMins").innerText = totalMinutes;
+    document.getElementById("statHrs").innerText = totalHours;
+    document.getElementById("statAvg").innerText = avgHours;
+
+    // Refresh and populate Calendar views
+    if (calendar) {
+        calendar.removeAllEvents();
+        calendar.addEventSource(calendarEvents);
+        
+        // Only trigger viewport adjustment on initial file upload sequence
+        if (dates.length > 0 && !showOnlyShort) {
+            calendar.gotoDate(dates[0]);
+        }
+    }
+}
+</script>
+
+</body>
+</html>
