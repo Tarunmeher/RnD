@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalFlix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-color: #141414;
+            --text-color: #fff;
+            --primary-red: #E50914;
+            --card-width: 240px;
+            --card-height: 135px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 4%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            transition: background 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background-color: #141414;
+        }
+
+        .logo {
+            color: var(--primary-red);
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .file-upload-btn {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-upload-btn:hover {
+            background-color: #b80710;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* --- HERO BILLBOARD --- */
+        .billboard {
+            position: relative;
+            height: 70vh;
+            background: linear-gradient(to right, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0) 80%), 
+                        url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925&auto=format&fit=crop') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            padding: 0 4%;
+            margin-bottom: 20px;
+        }
+
+        .billboard::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, var(--background-color), transparent);
+        }
+
+        .billboard-content {
+            max-width: 600px;
+            z-index: 2;
+        }
+
+        .billboard-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+
+        .billboard-desc {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #999;
+            line-height: 1.4;
+        }
+
+        /* --- VIDEO ROWS --- */
+        .category-row {
+            padding: 0 4%;
+            margin-bottom: 40px;
+        }
+
+        .row-title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: #e5e5e5;
+        }
+
+        .card-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scroll-behavior: smooth;
+        }
+
+        .card-container::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for clean look */
+        }
+
+        .video-card {
+            min-width: var(--card-width);
+            height: var(--card-height);
+            background-color: #2f2f2f;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .video-card:hover {
+            transform: scale(1.08);
+            z-index: 10;
+        }
+
+        .video-card .placeholder-thumb {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #1f1f1f, #3a3a3a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            padding: 10px;
+            text-align: center;
+            color: #ccc;
+        }
+
+        .video-card .card-metadata {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .video-card:hover .card-metadata {
+            opacity: 1;
+        }
+
+        /* --- THEATER MODAL PLAYER --- */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 80%;
+            max-width: 900px;
+            background: #000;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .modal-content video {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16/9;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #fff;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 2001;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: var(--primary-red);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar" id="navbar">
+        <div class="logo">LocalFlix</div>
+        <div>
+            <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()">+ Add Local Videos</button>
+            <input type="file" id="fileInput" accept="video/*" multiple>
+        </div>
+    </header>
+
+    <section class="billboard">
+        <div class="billboard-content">
+            <h1 class="billboard-title">Your Private Cinema</h1>
+            <p class="billboard-desc">Stream files straight from your local directory instantly. No server backend required, zero buffering, 100% data privacy.</p>
+        </div>
+    </section>
+
+    <main>
+        <div class="category-row">
+            <h2 class="row-title">Recently Added Files</h2>
+            <div class="card-container" id="recentContainer">
+                <div class="video-card" onclick="document.getElementById('fileInput').click()">
+                    <div class="placeholder-thumb">Click "Add Local Videos" up top to load media files</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-row">
+            <h2 class="row-title">My Binge List</h2>
+            <div class="card-container" id="bingeContainer">
+                 <div class="video-card" onclick="document.getElementById('fileInput').click()">
+                    <div class="placeholder-thumb">Supports MP4, WebM, and OGG formats</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="video-modal" id="videoModal">
+        <span class="close-modal" id="closeModal">&times;</span>
+        <div class="modal-content">
+            <video id="player" controls autoplay></video>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const navbar = document.getElementById('navbar');
+        const fileInput = document.getElementById('fileInput');
+        const recentContainer = document.getElementById('recentContainer');
+        const bingeContainer = document.getElementById('bingeContainer');
+        const videoModal = document.getElementById('videoModal');
+        const player = document.getElementById('player');
+        const closeModal = document.getElementById('closeModal');
+
+        // Transition navbar styling on scroll
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Listen for locally loaded video files
+        fileInput.addEventListener('change', function(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            // Clear defaults placeholders on first true import
+            recentContainer.innerHTML = '';
+            bingeContainer.innerHTML = '';
+
+            files.forEach((file, index) => {
+                // Generate a local browser blob DOM URI for the video asset
+                const fileURL = URL.createObjectURL(file);
+                // Extract and clean up names for presentation
+                const cleanName = file.name.replace(/\.[^/.]+$/, ""); 
+
+                // Generate a streaming card
+                const card = createVideoCard(cleanName, fileURL);
+
+                // Alternately distribute videos across lanes to simulate categories
+                if (index % 2 === 0) {
+                    recentContainer.appendChild(card);
+                } else {
+                    bingeContainer.appendChild(card);
+                }
+            });
+        });
+
+        // Factory function to build interactive UI cards
+        function createVideoCard(title, url) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            
+            card.innerHTML = `
+                <div class="placeholder-thumb">🎬</div>
+                <div class="card-metadata">
+                    <strong>${title}</strong>
+                </div>
+            `;
+
+            // Active video playback injection on trigger interaction
+            card.addEventListener('click', () => {
+                player.src = url;
+                videoModal.style.display = 'flex';
+                player.play();
+            });
+
+            return card;
+        }
+
+        // Close and clean up the active streaming viewport context
+        closeModal.addEventListener('click', () => {
+            videoModal.style.display = 'none';
+            player.pause();
+            player.src = ''; // Flush active RAM buffer instance
+        });
+
+        // Close on clicking outside the container layout window frame wrapper boundary boundaries
+        videoModal.addEventListener('click', (e) => {
+            if (e.target === videoModal) {
+                videoModal.style.display = 'none';
+                player.pause();
+                player.src = '';
+            }
+        });
+    </script>
+</body>
+</html>
